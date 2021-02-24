@@ -25,8 +25,8 @@ import (
 
 // The logger to use to log messages
 var (
-	log   = logf.Log.WithName("rest-server")
-	svr   *server
+	log = logf.Log.WithName("rest-server")
+	svr *server
 )
 
 type handler struct {
@@ -47,7 +47,7 @@ type Server interface {
 	// GetHostAndPort returns the address that the ReST server should be reached on by external processes
 	GetHostAndPort() string
 	// Start the REST server
-	Start(stop <-chan struct{}) error
+	Start(ctx context.Context) error
 	SetupWithManager(mgr ctrl.Manager) error
 }
 
@@ -78,7 +78,7 @@ func (s server) SetupWithManager(mgr ctrl.Manager) error {
 	return mgr.Add(s)
 }
 
-func (s server) Start(stop <-chan struct{}) error {
+func (s server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.Handle("/site/", handler{fn: s.getSiteLabelForNode})
 	mux.Handle("/rack/", handler{fn: s.getRackLabelForNode})

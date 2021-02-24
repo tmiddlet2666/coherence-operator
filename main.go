@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 2021 Oracle and/or its affiliates.
  * Licensed under the Universal Permissive License v 1.0 as shown at
  * http://oss.oracle.com/licenses/upl.
  */
@@ -7,6 +7,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/oracle/coherence-operator/controllers/webhook"
@@ -157,7 +158,7 @@ func execute() {
 			Clientset: cl,
 		}
 		if err := cr.SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, " unable to create webhook certificate controller","controller", "Certs")
+			setupLog.Error(err, " unable to create webhook certificate controller", "controller", "Certs")
 			os.Exit(1)
 		}
 
@@ -179,18 +180,16 @@ func execute() {
 	// +kubebuilder:scaffold:builder
 
 	// We intercept the signal handler here so that we can do clean-up before the Manager stops
-	signal := ctrl.SetupSignalHandler()
-	stop := make(chan struct{})
+	handler := ctrl.SetupSignalHandler()
 	go func() {
-		<- signal
+		<-handler.Done()
 		if cr != nil {
 			cr.Cleanup()
 		}
-		close(stop)
 	}()
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(stop); err != nil {
+	if err := mgr.Start(context.TODO()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
@@ -209,19 +208,19 @@ func initialiseOperator(cl clients.ClientSet) {
 
 // getWatchNamespace returns the Namespace(s) the operator should be watching for changes
 func getWatchNamespace() []string {
-    // WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-    // which specifies the Namespace to watch.
-    // An empty value means the operator is running with cluster scope.
-    var watchNamespaceEnvVar = "WATCH_NAMESPACE"
+	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
 	var watches []string
 
-    ns, found := os.LookupEnv(watchNamespaceEnvVar)
-    if !found || ns == "" || strings.TrimSpace(ns) == "" {
-        return watches
-    }
+	ns, found := os.LookupEnv(watchNamespaceEnvVar)
+	if !found || ns == "" || strings.TrimSpace(ns) == "" {
+		return watches
+	}
 
-    for _, s := range strings.Split(ns, ",") {
-    	watches = append(watches, strings.TrimSpace(s))
+	for _, s := range strings.Split(ns, ",") {
+		watches = append(watches, strings.TrimSpace(s))
 	}
 	return watches
 }
@@ -239,7 +238,7 @@ func printVersion() {
 
 var (
 	// build information injected by the Go linker at build time.
-	Version   string
-	Commit    string
-	Date      string
+	Version string
+	Commit  string
+	Date    string
 )
