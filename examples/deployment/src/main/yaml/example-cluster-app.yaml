@@ -14,6 +14,11 @@ spec:
   jvm:
     memory:
       heapSize: 512m
+    args:
+      - "-Dcoherence.tracing.ratio=1"
+      - "-DJAEGER_SERVICE_NAME=Coherence"
+      - "-DJAEGER_ENDPOINT=http://10.96.91.223:14268/api/traces"
+      - "-Dcoherence.distributed.asyncbackup=true"
   ports:
     - name: metrics
       port: 9612
@@ -23,34 +28,9 @@ spec:
     cacheConfig: storage-cache-config.xml
     metrics:
       enabled: true
-  image: deployment-example:1.0.0
+  image: tmiddlet/deployment-example:1.0.0
   imagePullPolicy: Always
-  replicas: 3
----
-apiVersion: coherence.oracle.com/v1
-kind: Coherence
-metadata:
-  name: example-cluster-proxy
-spec:
-  cluster: example-cluster
-  jvm:
-    memory:
-      heapSize: 512m
-  ports:
-    - name: metrics
-      port: 9612
-      serviceMonitor:
-        enabled: true
-    - name: proxy
-      port: 20000
-  coherence:
-    cacheConfig: proxy-cache-config.xml
-    storageEnabled: false
-    metrics:
-      enabled: true
-  image: deployment-example:1.0.0
-  imagePullPolicy: Always
-  replicas: 1
+  replicas: 2
 ---
 apiVersion: coherence.oracle.com/v1
 kind: Coherence
@@ -61,6 +41,11 @@ spec:
   jvm:
     memory:
       heapSize: 512m
+    args:
+      - "-Dcoherence.tracing.ratio=1"
+      - "-DJAEGER_SERVICE_NAME=Coherence"
+      - "-DJAEGER_ENDPOINT=http://10.96.91.223:14268/api/traces"
+      - "-Dcoherence.distributed.asyncbackup=true"
   ports:
     - name: metrics
       port: 9612
@@ -73,7 +58,7 @@ spec:
     storageEnabled: false
     metrics:
       enabled: true
-  image: deployment-example:1.0.0
+  image: tmiddlet/deployment-example:1.0.0
   imagePullPolicy: Always
   application:
     main: com.oracle.coherence.examples.Main
